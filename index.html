@@ -8,8 +8,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --background-light: #f3f4f6; --text-light: #111827; --card-bg-light: #ffffff; --border-light: #e5e7eb;
+            --background-dark: #1f2937; --text-dark: #e5e7eb; --card-bg-dark: #374151; --border-dark: #4b5563;
+        }
+        html.dark {
+            --background: var(--background-dark); --text-color: var(--text-dark); --card-bg: var(--card-bg-dark); --border-color: var(--border-dark);
+        }
+        html.light {
+            --background: var(--background-light); --text-color: var(--text-light); --card-bg: var(--card-bg-light); --border-color: var(--border-light);
+        }
         body {
             font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+        .input-base {
+            background-color: var(--background);
+            border-color: var(--border-color);
         }
         .loader {
             border-top-color: #10b981;
@@ -21,39 +42,39 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="flex items-center justify-center min-h-screen">
 
     <div class="w-full max-w-md mx-auto p-4">
-        <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
-            <div class="text-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-800">Quran Player</h1>
-                <p class="text-gray-500 mt-1">Listen to the Holy Quran in Arabic or English.</p>
+        <div class="card rounded-2xl shadow-xl p-6 sm:p-8">
+            <div class="flex justify-between items-center mb-6">
+                 <h1 class="text-3xl font-bold">Quran Player</h1>
+                 <button id="theme-toggle" class="p-2 h-10 w-10 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-xl transition-colors">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
+            <p class="text-gray-500 dark:text-gray-400 -mt-4 mb-6">Listen to the Holy Quran in Arabic or English.</p>
 
             <div class="space-y-4">
                 <!-- Language Selection -->
                 <div>
-                    <label for="language-select" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
-                    <select id="language-select" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                        <option value="ar">Arabic</option>
-                        <option value="en">English</option>
-                    </select>
+                    <label for="language-select" class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Language</label>
+                    <select id="language-select" class="w-full p-3 input-base rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"></select>
                 </div>
                 <!-- Surah Selection -->
                 <div>
-                    <label for="surah-select" class="block text-sm font-medium text-gray-700 mb-1">Surah</label>
-                    <select id="surah-select" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"></select>
+                    <label for="surah-select" class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Surah</label>
+                    <select id="surah-select" class="w-full p-3 input-base rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"></select>
                 </div>
                 <!-- Reciter Selection -->
                 <div id="reciter-container">
-                    <label for="reciter-select" class="block text-sm font-medium text-gray-700 mb-1">Reciter</label>
-                    <select id="reciter-select" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"></select>
+                    <label for="reciter-select" class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Reciter</label>
+                    <select id="reciter-select" class="w-full p-3 input-base rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"></select>
                 </div>
             </div>
 
             <!-- Verse Text Display -->
-            <div id="verse-display" class="mt-6 p-4 bg-gray-50 rounded-lg min-h-[100px] text-center text-gray-700 hidden">
-                <p id="verse-text"></p>
+            <div id="verse-display" class="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg min-h-[100px] text-center hidden">
+                <p id="verse-text" class="text-gray-700 dark:text-gray-300"></p>
             </div>
 
             <!-- Audio Player -->
@@ -62,14 +83,14 @@
                 <audio id="audio-player" controls class="w-full"></audio>
                 <div id="navigation-controls" class="flex justify-between items-center mt-2 hidden">
                     <button id="prev-verse-btn" class="p-2 text-xl hover:text-emerald-500 transition-colors"><i class="fas fa-backward"></i></button>
-                    <p id="verse-indicator" class="text-sm text-gray-500"></p>
+                    <p id="verse-indicator" class="text-sm text-gray-500 dark:text-gray-400"></p>
                     <button id="next-verse-btn" class="p-2 text-xl hover:text-emerald-500 transition-colors"><i class="fas fa-forward"></i></button>
                 </div>
                 <p id="error-message" class="text-center text-red-500 mt-2"></p>
             </div>
         </div>
         <footer class="text-center mt-6 text-sm text-gray-400">
-            <p>Powered by Quran.com & Al-Quran Cloud APIs</p>
+            <p>Powered by Quran.com & Al-Quran Cloud</p>
         </footer>
     </div>
 
@@ -89,6 +110,7 @@
         const prevVerseBtn = document.getElementById('prev-verse-btn');
         const nextVerseBtn = document.getElementById('next-verse-btn');
         const verseIndicator = document.getElementById('verse-indicator');
+        const themeToggle = document.getElementById('theme-toggle');
 
         // State
         let allSurahs = [];
@@ -100,7 +122,9 @@
         const API_ALQURAN_CLOUD = 'https://api.alquran.cloud/v1';
 
         async function initialize() {
+            loadTheme();
             loader.classList.remove('hidden');
+            languageSelect.innerHTML = `<option value="ar">Arabic</option><option value="en">English</option>`;
             await populateSurahs();
             await handleLanguageChange();
             loader.classList.add('hidden');
@@ -164,7 +188,6 @@
             loader.classList.add('hidden');
         }
         
-        // FIX: Renamed function to be more generic
         async function updateAudioSource() {
             const lang = languageSelect.value;
             if (lang === 'ar') {
@@ -216,12 +239,10 @@
             audioPlayer.src = '';
             
             try {
-                // REVERT: Fetch only the English audio edition
                 const response = await fetch(`${API_ALQURAN_CLOUD}/surah/${chapterId}/${reciterId}`);
                 if (!response.ok) throw new Error('English audio for this selection not found.');
                 const data = await response.json();
                 
-                // REVERT: Handle the simpler data structure
                 currentEnglishAudioData = data.data.ayahs;
                 totalVerses = data.data.numberOfAyahs;
                 currentVerse = 1;
@@ -240,7 +261,6 @@
             
             const verseData = currentEnglishAudioData[currentVerse - 1];
             audioPlayer.src = verseData.audio;
-            // REVERT: Only show the English text
             verseTextEl.textContent = `"${verseData.text}"`;
             verseIndicator.textContent = `Verse ${currentVerse} of ${totalVerses}`;
 
@@ -257,12 +277,29 @@
                 playEnglishVerse();
             }
         }
+        
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('quranTheme', isDark ? 'dark' : 'light');
+            themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+
+        function loadTheme() {
+            const theme = localStorage.getItem('quranTheme');
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                 document.documentElement.classList.remove('dark');
+                 themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
 
         // Event Listeners
         languageSelect.addEventListener('change', handleLanguageChange);
-        // FIX: Call the correct function on change
         surahSelect.addEventListener('change', updateAudioSource);
         reciterSelect.addEventListener('change', updateAudioSource);
+        themeToggle.addEventListener('click', toggleTheme);
 
         prevVerseBtn.addEventListener('click', () => navigateEnglishVerse(-1));
         nextVerseBtn.addEventListener('click', () => navigateEnglishVerse(1));
