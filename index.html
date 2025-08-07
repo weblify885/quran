@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --background-light: #f3f4f6; --text-light: #111827; --card-bg-light: #ffffff; --border-light: #e5e7eb;
+            --background-light: #f3f4f6; --text-light: #111827; --card-bg-light: #ffffff; --border-light: #d1d5db; /* Updated border color */
             --background-dark: #1f2937; --text-dark: #e5e7eb; --card-bg-dark: #374151; --border-dark: #4b5563;
         }
         html.dark {
@@ -30,7 +30,7 @@
         }
         .input-base {
             background-color: var(--background);
-            border-color: var(--border-color);
+            border: 1px solid var(--border-color);
         }
         .loader {
             border-top-color: #10b981;
@@ -40,6 +40,19 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* Custom Audio Player Styles */
+        audio::-webkit-media-controls-panel {
+            background-color: #4b5563;
+        }
+        audio::-webkit-media-controls-play-button {
+             background-color: #10b981;
+             border-radius: 50%;
+        }
+         audio::-webkit-media-controls-current-time-display,
+         audio::-webkit-media-controls-time-remaining-display {
+            color: #ffffff;
+        }
+
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
@@ -78,7 +91,7 @@
             </div>
 
             <!-- Audio Player -->
-            <div class="mt-8">
+            <div id="audio-player-wrapper" class="mt-8 bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
                 <div id="loader" class="hidden loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mx-auto mb-4"></div>
                 <audio id="audio-player" controls class="w-full"></audio>
                 <div id="navigation-controls" class="flex justify-between items-center mt-2 hidden">
@@ -285,7 +298,7 @@
         }
 
         function loadTheme() {
-            const theme = localStorage.getItem('quranTheme');
+            const theme = localStorage.getItem('quranTheme') || 'dark'; // Default to dark
             if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
                 themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
