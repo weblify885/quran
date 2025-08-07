@@ -52,6 +52,12 @@
          audio::-webkit-media-controls-time-remaining-display {
             color: #ffffff;
         }
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease;
+        }
 
     </style>
 </head>
@@ -104,7 +110,37 @@
         </div>
         <footer class="text-center mt-6 text-sm text-gray-400">
             <p>Powered by Quran.com & Al-Quran Cloud</p>
+            <div class="mt-2 space-x-4">
+                <a href="#" id="about-link" class="hover:text-emerald-500">About</a>
+                <a href="#" id="privacy-link" class="hover:text-emerald-500">Privacy Policy</a>
+                <a href="#" id="contact-link" class="hover:text-emerald-500">Contact Us</a>
+            </div>
         </footer>
+    </div>
+    
+    <!-- Modals -->
+    <div id="about-modal" class="modal fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-40 p-4 opacity-0">
+        <div class="modal-content card p-6 rounded-lg max-w-md w-full transform scale-95">
+            <h2 class="text-2xl font-bold mb-4">About Quran Player</h2>
+            <p class="text-gray-600 dark:text-gray-300">This web application provides a simple and elegant way to listen to the Holy Quran in both Arabic and English. It is designed to be a helpful tool for Muslims and anyone interested in learning about Islam.</p>
+            <button class="mt-6 w-full py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 close-modal-btn">Close</button>
+        </div>
+    </div>
+
+     <div id="privacy-modal" class="modal fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-40 p-4 opacity-0">
+        <div class="modal-content card p-6 rounded-lg max-w-md w-full transform scale-95">
+            <h2 class="text-2xl font-bold mb-4">Privacy Policy</h2>
+            <p class="text-gray-600 dark:text-gray-300"><strong></strong><br><br>This app uses localStorage to save your theme preference on your device. No personal data is sent to any server. We are committed to protecting your privacy.</p>
+            <button class="mt-6 w-full py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 close-modal-btn">Close</button>
+        </div>
+    </div>
+    
+    <div id="contact-modal" class="modal fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-40 p-4 opacity-0">
+        <div class="modal-content card p-6 rounded-lg max-w-md w-full transform scale-95">
+            <h2 class="text-2xl font-bold mb-4">Contact Us</h2>
+            <p class="text-gray-600 dark:text-gray-300"><strong>Weblify Solutions<br><a href="https://weblifysolutions.netlify.app/">https://weblifysolutions.netlify.app/</a><br></strong><br><br>If you have any questions or suggestions, please feel free to reach out to us at: weblify885@gmail.com</p>
+            <button class="mt-6 w-full py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 close-modal-btn">Close</button>
+        </div>
     </div>
 
     <script>
@@ -124,6 +160,12 @@
         const nextVerseBtn = document.getElementById('next-verse-btn');
         const verseIndicator = document.getElementById('verse-indicator');
         const themeToggle = document.getElementById('theme-toggle');
+        const aboutLink = document.getElementById('about-link');
+        const privacyLink = document.getElementById('privacy-link');
+        const contactLink = document.getElementById('contact-link');
+        const aboutModal = document.getElementById('about-modal');
+        const privacyModal = document.getElementById('privacy-modal');
+        const contactModal = document.getElementById('contact-modal');
 
         // State
         let allSurahs = [];
@@ -307,12 +349,39 @@
                  themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
             }
         }
+        
+        function openModal(modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.modal-content').classList.remove('scale-95');
+            }, 10);
+        }
+        function closeModal(modal) {
+            modal.classList.add('opacity-0');
+            modal.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
 
         // Event Listeners
         languageSelect.addEventListener('change', handleLanguageChange);
         surahSelect.addEventListener('change', updateAudioSource);
         reciterSelect.addEventListener('change', updateAudioSource);
         themeToggle.addEventListener('click', toggleTheme);
+        aboutLink.addEventListener('click', (e) => { e.preventDefault(); openModal(aboutModal); });
+        privacyLink.addEventListener('click', (e) => { e.preventDefault(); openModal(privacyModal); });
+        contactLink.addEventListener('click', (e) => { e.preventDefault(); openModal(contactModal); });
+        
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(modal); });
+        });
+        document.querySelectorAll('.close-modal-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const modal = e.target.closest('.modal');
+                if (modal) closeModal(modal);
+            });
+        });
+
 
         prevVerseBtn.addEventListener('click', () => navigateEnglishVerse(-1));
         nextVerseBtn.addEventListener('click', () => navigateEnglishVerse(1));
