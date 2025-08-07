@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Quran Audio Player</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .loader {
+            border-top-color: #10b981;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-md mx-auto p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Quran Player</h1>
+                <p class="text-gray-500 mt-1">Listen to the Holy Quran in Arabic or English.</p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Language Selection -->
+                <div>
+                    <label for="language-select" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                    <select id="language-select" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                        <option value="ar">Arabic</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <!-- Surah Selection -->
+                <div>
+                    <label for="surah-select" class="block text-sm font-medium text-gray-700 mb-1">Surah</label>
+                    <select id="surah-select" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"></select>
+                </div>
+                <!-- Reciter Selection -->
+                <div id="reciter-container">
+                    <label for="reciter-select" class="block text-sm font-medium text-gray-700 mb-1">Reciter</label>
+                    <select id="reciter-select" class="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"></select>
+                </div>
+            </div>
+
+            <!-- Verse Text Display -->
+            <div id="verse-display" class="mt-6 p-4 bg-gray-50 rounded-lg min-h-[100px] text-center text-gray-700 hidden">
+                <p id="verse-text"></p>
+            </div>
+
+            <!-- Audio Player -->
+            <div class="mt-8">
+                <div id="loader" class="hidden loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mx-auto mb-4"></div>
+                <audio id="audio-player" controls class="w-full"></audio>
+                <div id="navigation-controls" class="flex justify-between items-center mt-2 hidden">
+                    <button id="prev-verse-btn" class="p-2 text-xl hover:text-emerald-500 transition-colors"><i class="fas fa-backward"></i></button>
+                    <p id="verse-indicator" class="text-sm text-gray-500"></p>
+                    <button id="next-verse-btn" class="p-2 text-xl hover:text-emerald-500 transition-colors"><i class="fas fa-forward"></i></button>
+                </div>
+                <p id="error-message" class="text-center text-red-500 mt-2"></p>
+            </div>
+        </div>
+        <footer class="text-center mt-6 text-sm text-gray-400">
+            <p>Powered by Quran.com & Al-Quran Cloud APIs</p>
+        </footer>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // DOM Elements
+        const languageSelect = document.getElementById('language-select');
+        const surahSelect = document.getElementById('surah-select');
+        const reciterSelect = document.getElementById('reciter-select');
+        const reciterContainer = document.getElementById('reciter-container');
+        const audioPlayer = document.getElementById('audio-player');
+        const loader = document.getElementById('loader');
+        const errorMessage = document.getElementById('error-message');
+        const verseDisplay = document.getElementById('verse-display');
+        const verseTextEl = document.getElementById('verse-text');
+        const navControls = document.getElementById('navigation-controls');
+        const prevVerseBtn = document.getElementById('prev-verse-btn');
+        const nextVerseBtn = document.getElementById('next-verse-btn');
+        const verseIndicator = document.getElementById('verse-indicator');
+
+        // State
+        let allSurahs = [];
+        let currentVerse = 1;
+        let totalVerses = 0;
+        let currentEnglishAudioData = [];
+
+        const API_QURAN_COM = 'https://api.quran.com/api/v4';
+        const API_ALQURAN_CLOUD = 'https://api.alquran.cloud/v1';
+
+        async function initialize() {
+            loader.classList.remove('hidden');
+            await populateSurahs();
+            await handleLanguageChange();
+            loader.classList.add('hidden');
+        }
+
+        async function populateSurahs() {
+            try {
+                const response = await fetch(`${API_QURAN_COM}/chapters?language=en`);
+                if (!response.ok) throw new Error('Failed to fetch Surahs');
+                const data = await response.json();
+                allSurahs = data.chapters;
+                surahSelect.innerHTML = allSurahs.map(chapter => 
+                    `<option value="${chapter.id}" data-verses="${chapter.verses_count}">${chapter.id}. ${chapter.name_simple} (${chapter.translated_name.name})</option>`
+                ).join('');
+            } catch (error) {
+                console.error(error);
+                errorMessage.textContent = 'Could not load Surah list.';
+            }
+        }
+
+        async function populateArabicReciters() {
+            try {
+                const response = await fetch(`${API_QURAN_COM}/resources/recitations?language=en`);
+                if (!response.ok) throw new Error('Failed to fetch reciters');
+                const data = await response.json();
+                reciterSelect.innerHTML = data.recitations.map(reciter => 
+                    `<option value="${reciter.id}">${reciter.reciter_name} (${reciter.style || 'N/A'})</option>`
+                ).join('');
+            } catch (error) {
+                console.error(error);
+                errorMessage.textContent = 'Could not load reciter list.';
+            }
+        }
+        
+        async function populateEnglishReciters() {
+             try {
+                const response = await fetch(`${API_ALQURAN_CLOUD}/edition/format/audio`);
+                if (!response.ok) throw new Error('Failed to fetch English reciters');
+                const data = await response.json();
+                const englishReciters = data.data.filter(e => e.language === 'en');
+                reciterSelect.innerHTML = englishReciters.map(reciter => 
+                    `<option value="${reciter.identifier}">${reciter.englishName}</option>`
+                ).join('');
+            } catch (error) {
+                console.error(error);
+                errorMessage.textContent = 'Could not load English reciter list.';
+            }
+        }
+
+        async function handleLanguageChange() {
+            const lang = languageSelect.value;
+            loader.classList.remove('hidden');
+            reciterContainer.classList.toggle('hidden', lang !== 'ar' && lang !== 'en');
+            
+            if (lang === 'ar') {
+                await populateArabicReciters();
+            } else { // English
+                await populateEnglishReciters();
+            }
+            await updateAudioSource();
+            loader.classList.add('hidden');
+        }
+        
+        // FIX: Renamed function to be more generic
+        async function updateAudioSource() {
+            const lang = languageSelect.value;
+            if (lang === 'ar') {
+                await fetchArabicAudio();
+            } else {
+                await fetchEnglishAudio();
+            }
+        }
+
+        async function fetchArabicAudio() {
+            const chapterId = surahSelect.value;
+            const reciterId = reciterSelect.value;
+
+            if (!chapterId || !reciterId) return;
+
+            loader.classList.remove('hidden');
+            errorMessage.textContent = '';
+            audioPlayer.src = '';
+            verseDisplay.classList.add('hidden');
+            navControls.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_QURAN_COM}/chapter_recitations/${reciterId}/${chapterId}`);
+                if (!response.ok) throw new Error('Audio for this selection not found.');
+                const data = await response.json();
+                
+                if (data.audio_file && data.audio_file.audio_url) {
+                    audioPlayer.src = data.audio_file.audio_url;
+                    audioPlayer.play().catch(e => console.log("Autoplay prevented by browser."));
+                } else {
+                    throw new Error('Audio URL not available for this selection.');
+                }
+            } catch (error) {
+                console.error(error);
+                errorMessage.textContent = error.message;
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        async function fetchEnglishAudio() {
+            const chapterId = surahSelect.value;
+            const reciterId = reciterSelect.value;
+
+            if (!chapterId || !reciterId) return;
+
+            loader.classList.remove('hidden');
+            errorMessage.textContent = '';
+            audioPlayer.src = '';
+            
+            try {
+                // REVERT: Fetch only the English audio edition
+                const response = await fetch(`${API_ALQURAN_CLOUD}/surah/${chapterId}/${reciterId}`);
+                if (!response.ok) throw new Error('English audio for this selection not found.');
+                const data = await response.json();
+                
+                // REVERT: Handle the simpler data structure
+                currentEnglishAudioData = data.data.ayahs;
+                totalVerses = data.data.numberOfAyahs;
+                currentVerse = 1;
+                playEnglishVerse();
+
+            } catch (error) {
+                console.error(error);
+                errorMessage.textContent = error.message;
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        function playEnglishVerse() {
+            if (currentEnglishAudioData.length === 0) return;
+            
+            const verseData = currentEnglishAudioData[currentVerse - 1];
+            audioPlayer.src = verseData.audio;
+            // REVERT: Only show the English text
+            verseTextEl.textContent = `"${verseData.text}"`;
+            verseIndicator.textContent = `Verse ${currentVerse} of ${totalVerses}`;
+
+            verseDisplay.classList.remove('hidden');
+            navControls.classList.remove('hidden');
+
+            audioPlayer.play().catch(e => console.log("Autoplay prevented by browser."));
+        }
+
+        function navigateEnglishVerse(direction) {
+            let nextVerse = currentVerse + direction;
+            if (nextVerse > 0 && nextVerse <= totalVerses) {
+                currentVerse = nextVerse;
+                playEnglishVerse();
+            }
+        }
+
+        // Event Listeners
+        languageSelect.addEventListener('change', handleLanguageChange);
+        // FIX: Call the correct function on change
+        surahSelect.addEventListener('change', updateAudioSource);
+        reciterSelect.addEventListener('change', updateAudioSource);
+
+        prevVerseBtn.addEventListener('click', () => navigateEnglishVerse(-1));
+        nextVerseBtn.addEventListener('click', () => navigateEnglishVerse(1));
+        audioPlayer.addEventListener('ended', () => {
+            if (languageSelect.value === 'en') {
+                navigateEnglishVerse(1); // Continuous play for English
+            }
+        });
+
+        // Start the app
+        initialize();
+    });
+    </script>
+</body>
+</html>
